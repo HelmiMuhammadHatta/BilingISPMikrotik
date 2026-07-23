@@ -14,24 +14,6 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Customers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Address = table.Column<string>(type: "text", nullable: false),
-                    Phone = table.Column<string>(type: "text", nullable: false),
-                    PppUsername = table.Column<string>(type: "text", nullable: false),
-                    PppPassword = table.Column<string>(type: "text", nullable: false),
-                    Status = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Customers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ServicePlans",
                 columns: table => new
                 {
@@ -48,25 +30,27 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "MikrotikActionLogs",
+                name: "Customers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Action = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<string>(type: "text", nullable: false),
-                    ExecutedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ErrorMessage = table.Column<string>(type: "text", nullable: false)
+                    Name = table.Column<string>(type: "text", nullable: false),
+                    Address = table.Column<string>(type: "text", nullable: false),
+                    Phone = table.Column<string>(type: "text", nullable: false),
+                    PppUsername = table.Column<string>(type: "text", nullable: false),
+                    PppPassword = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<int>(type: "integer", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ServicePlanId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_MikrotikActionLogs", x => x.Id);
+                    table.PrimaryKey("PK_Customers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MikrotikActionLogs_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "FK_Customers_ServicePlans_ServicePlanId",
+                        column: x => x.ServicePlanId,
+                        principalTable: "ServicePlans",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -101,6 +85,28 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "MikrotikActionLogs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Action = table.Column<int>(type: "integer", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    ExecutedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "text", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MikrotikActionLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MikrotikActionLogs_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PaymentLogs",
                 columns: table => new
                 {
@@ -123,26 +129,31 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "Customers",
-                columns: new[] { "Id", "Address", "CreatedAt", "Name", "Phone", "PppPassword", "PppUsername", "Status" },
-                values: new object[,]
-                {
-                    { new Guid("341c2af0-c515-4ab4-829b-8f469b0e66e7"), "Jl. Merdeka No 1", new DateTime(2026, 6, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(3365), "Budi Santoso", "081234567890", "passwordbudi", "budi", 0 },
-                    { new Guid("8873625f-dffd-46a3-acff-e4059777851f"), "Jl. Gatot Subroto No 4", new DateTime(2026, 3, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4087), "Dewi Lestari", "084567890123", "passworddewi", "dewi", 0 },
-                    { new Guid("d47cd502-8e81-4c68-a1b5-404da935add5"), "Jl. Sudirman No 2", new DateTime(2026, 5, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4072), "Siti Aminah", "082345678901", "passwordsiti", "siti", 0 },
-                    { new Guid("d85d406d-3056-4090-a7b4-2f0c624d2e59"), "Jl. Thamrin No 3", new DateTime(2026, 4, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4082), "Agus Pratama", "083456789012", "passwordagus", "agus", 1 },
-                    { new Guid("dd202a1f-13d3-469d-afca-f7dd83a138e4"), "Jl. Ahmad Yani No 5", new DateTime(2026, 2, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4090), "Joko Widodo", "085678901234", "passwordjoko", "joko", 2 }
-                });
-
-            migrationBuilder.InsertData(
                 table: "ServicePlans",
                 columns: new[] { "Id", "MikrotikProfileName", "Name", "Price", "SpeedDown", "SpeedUp" },
                 values: new object[,]
                 {
-                    { new Guid("1b9da367-44e8-4ee3-9521-4de0c768ad43"), "profile_20m", "Standard 20Mbps", 250000m, 20, 20 },
-                    { new Guid("ceb16e3d-b847-445b-baaf-88712278c68e"), "profile_10m", "Basic 10Mbps", 150000m, 10, 10 },
-                    { new Guid("dc527fe1-1447-4d10-8634-b5f4b3f69186"), "profile_50m", "Premium 50Mbps", 400000m, 50, 50 }
+                    { new Guid("11111111-1111-1111-1111-111111111111"), "profile_10m", "Basic 10Mbps", 150000m, 10, 10 },
+                    { new Guid("22222222-2222-2222-2222-222222222222"), "profile_20m", "Standard 20Mbps", 250000m, 20, 20 },
+                    { new Guid("33333333-3333-3333-3333-333333333333"), "profile_50m", "Premium 50Mbps", 400000m, 50, 50 }
                 });
+
+            migrationBuilder.InsertData(
+                table: "Customers",
+                columns: new[] { "Id", "Address", "CreatedAt", "Name", "Phone", "PppPassword", "PppUsername", "ServicePlanId", "Status" },
+                values: new object[,]
+                {
+                    { new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "Jl. Merdeka No 1", new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Budi Santoso", "081234567890", "passwordbudi", "budi", new Guid("11111111-1111-1111-1111-111111111111"), 0 },
+                    { new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "Jl. Sudirman No 2", new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Siti Aminah", "082345678901", "passwordsiti", "siti", new Guid("22222222-2222-2222-2222-222222222222"), 0 },
+                    { new Guid("cccccccc-cccc-cccc-cccc-cccccccccccc"), "Jl. Thamrin No 3", new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Agus Pratama", "083456789012", "passwordagus", "agus", new Guid("11111111-1111-1111-1111-111111111111"), 1 },
+                    { new Guid("dddddddd-dddd-dddd-dddd-dddddddddddd"), "Jl. Gatot Subroto No 4", new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Dewi Lestari", "084567890123", "passworddewi", "dewi", new Guid("33333333-3333-3333-3333-333333333333"), 0 },
+                    { new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"), "Jl. Ahmad Yani No 5", new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Joko Widodo", "085678901234", "passwordjoko", "joko", new Guid("22222222-2222-2222-2222-222222222222"), 2 }
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_ServicePlanId",
+                table: "Customers",
+                column: "ServicePlanId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invoices_CustomerId",

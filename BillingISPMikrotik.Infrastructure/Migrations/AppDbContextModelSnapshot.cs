@@ -51,67 +51,77 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ServicePlanId")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ServicePlanId");
 
                     b.ToTable("Customers");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("341c2af0-c515-4ab4-829b-8f469b0e66e7"),
+                            Id = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
                             Address = "Jl. Merdeka No 1",
-                            CreatedAt = new DateTime(2026, 6, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(3365),
+                            CreatedAt = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Budi Santoso",
                             Phone = "081234567890",
                             PppPassword = "passwordbudi",
                             PppUsername = "budi",
+                            ServicePlanId = new Guid("11111111-1111-1111-1111-111111111111"),
                             Status = 0
                         },
                         new
                         {
-                            Id = new Guid("d47cd502-8e81-4c68-a1b5-404da935add5"),
+                            Id = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
                             Address = "Jl. Sudirman No 2",
-                            CreatedAt = new DateTime(2026, 5, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4072),
+                            CreatedAt = new DateTime(2025, 11, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Siti Aminah",
                             Phone = "082345678901",
                             PppPassword = "passwordsiti",
                             PppUsername = "siti",
+                            ServicePlanId = new Guid("22222222-2222-2222-2222-222222222222"),
                             Status = 0
                         },
                         new
                         {
-                            Id = new Guid("d85d406d-3056-4090-a7b4-2f0c624d2e59"),
+                            Id = new Guid("cccccccc-cccc-cccc-cccc-cccccccccccc"),
                             Address = "Jl. Thamrin No 3",
-                            CreatedAt = new DateTime(2026, 4, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4082),
+                            CreatedAt = new DateTime(2025, 10, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Agus Pratama",
                             Phone = "083456789012",
                             PppPassword = "passwordagus",
                             PppUsername = "agus",
+                            ServicePlanId = new Guid("11111111-1111-1111-1111-111111111111"),
                             Status = 1
                         },
                         new
                         {
-                            Id = new Guid("8873625f-dffd-46a3-acff-e4059777851f"),
+                            Id = new Guid("dddddddd-dddd-dddd-dddd-dddddddddddd"),
                             Address = "Jl. Gatot Subroto No 4",
-                            CreatedAt = new DateTime(2026, 3, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4087),
+                            CreatedAt = new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Dewi Lestari",
                             Phone = "084567890123",
                             PppPassword = "passworddewi",
                             PppUsername = "dewi",
+                            ServicePlanId = new Guid("33333333-3333-3333-3333-333333333333"),
                             Status = 0
                         },
                         new
                         {
-                            Id = new Guid("dd202a1f-13d3-469d-afca-f7dd83a138e4"),
+                            Id = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
                             Address = "Jl. Ahmad Yani No 5",
-                            CreatedAt = new DateTime(2026, 2, 23, 6, 32, 35, 640, DateTimeKind.Utc).AddTicks(4090),
+                            CreatedAt = new DateTime(2025, 8, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             Name = "Joko Widodo",
                             Phone = "085678901234",
                             PppPassword = "passwordjoko",
                             PppUsername = "joko",
+                            ServicePlanId = new Guid("22222222-2222-2222-2222-222222222222"),
                             Status = 2
                         });
                 });
@@ -245,7 +255,7 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("ceb16e3d-b847-445b-baaf-88712278c68e"),
+                            Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             MikrotikProfileName = "profile_10m",
                             Name = "Basic 10Mbps",
                             Price = 150000m,
@@ -254,7 +264,7 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("1b9da367-44e8-4ee3-9521-4de0c768ad43"),
+                            Id = new Guid("22222222-2222-2222-2222-222222222222"),
                             MikrotikProfileName = "profile_20m",
                             Name = "Standard 20Mbps",
                             Price = 250000m,
@@ -263,13 +273,22 @@ namespace BillingISPMikrotik.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("dc527fe1-1447-4d10-8634-b5f4b3f69186"),
+                            Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             MikrotikProfileName = "profile_50m",
                             Name = "Premium 50Mbps",
                             Price = 400000m,
                             SpeedDown = 50,
                             SpeedUp = 50
                         });
+                });
+
+            modelBuilder.Entity("BillingISPMikrotik.Domain.Entities.Customer", b =>
+                {
+                    b.HasOne("BillingISPMikrotik.Domain.Entities.ServicePlan", "ServicePlan")
+                        .WithMany()
+                        .HasForeignKey("ServicePlanId");
+
+                    b.Navigation("ServicePlan");
                 });
 
             modelBuilder.Entity("BillingISPMikrotik.Domain.Entities.Invoice", b =>

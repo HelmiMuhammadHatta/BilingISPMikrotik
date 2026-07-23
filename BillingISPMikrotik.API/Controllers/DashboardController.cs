@@ -35,16 +35,25 @@ public class DashboardController : ControllerBase
         var pendingInvoicesCount = await _dbContext.Invoices
             .CountAsync(i => i.Status == InvoiceStatus.Unpaid);
 
-        var revenueChartData = await _dbContext.Invoices
+        var revenueChartDataRaw = await _dbContext.Invoices
             .Where(i => i.Status == InvoiceStatus.Paid && i.PaidAt.HasValue)
             .GroupBy(i => new { i.PaidAt.Value.Year, i.PaidAt.Value.Month })
             .Select(g => new
             {
-                name = $"{g.Key.Month}/{g.Key.Year}",
+                Year = g.Key.Year,
+                Month = g.Key.Month,
                 revenue = g.Sum(i => i.Amount)
             })
-            .OrderBy(x => x.name)
             .ToListAsync();
+
+        var revenueChartData = revenueChartDataRaw
+            .Select(x => new
+            {
+                name = $"{x.Month}/{x.Year}",
+                revenue = x.revenue
+            })
+            .OrderBy(x => x.name)
+            .ToList();
 
         return Ok(new
         {

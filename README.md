@@ -42,12 +42,15 @@ Arahkan terminal ke dalam folder `BillingISPMikrotik.API`.
 dotnet restore
 
 # Sesuaikan koneksi Database di appsettings.json
-# Default: Host=localhost;Database=BillingISP;Username=postgres;Password=postgres;
+# Default: Host=localhost;Port=5432;Database=BillingISP;Username=postgres;Password=20;
+
+# Update skema database (Migrations)
+dotnet ef database update --project ../BillingISPMikrotik.Infrastructure --startup-project .
 
 # Jalankan server
 dotnet run
 ```
-_Swagger UI dapat diakses di `http://localhost:5000/swagger`_
+_Swagger UI dapat diakses di `http://localhost:5233/swagger`_
 
 ### 2. Frontend (Admin Dashboard)
 Arahkan terminal baru ke dalam folder `frontend-admin`.
@@ -59,6 +62,16 @@ npm install
 npm run dev
 ```
 _Dashboard admin dapat diakses di `http://localhost:3000`_
+
+---
+
+## 🔑 JWT Authentication (Login Admin)
+
+API dan Dashboard dilindungi oleh sistem Autentikasi JWT.
+- **Username Default:** `admin`
+- **Password Default:** `password123`
+
+Untuk mencoba API langsung melalui Swagger, panggil *endpoint* `/api/Auth/login` untuk mendapatkan `token`, lalu masukkan ke tombol **Authorize** di pojok kanan atas Swagger dengan format: `Bearer <token_anda>`.
 
 ---
 
@@ -76,5 +89,19 @@ Webhook URL yang harus didaftarkan di Dashboard Midtrans adalah:
 
 ---
 
+## 🧪 E2E Integration Testing
+
+Aplikasi ini sudah dilengkapi dengan _End-to-End Test Suite_ (ditulis dengan **xUnit** dan **Moq**).
+Untuk memastikan bahwa logika bisnis utama (termasuk *Invoice Generation*, *Auto-Isolir*, dan *Payment Auto Restore*) berjalan dengan aman:
+1. Pindah ke direktori pengujian:
+   ```bash
+   cd C:\BilingISPMikrotik\BillingISPMikrotik.Application.Tests
+   ```
+2. Jalankan tes otomatis:
+   ```bash
+   dotnet test
+   ```
+
+---
 ## 📄 Lisensi
 Proyek ini dibuat sebagai fondasi manajemen ISP yang mandiri. Silakan modifikasi sesuai dengan kebutuhan bisnis penyedia layanan internet Anda!
