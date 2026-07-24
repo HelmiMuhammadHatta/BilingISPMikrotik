@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit2 } from "lucide-react";
+import { CustomerModal, CustomerForm } from "@/components/CustomerModal";
 
 type Customer = {
   id: string;
@@ -20,19 +21,27 @@ type Customer = {
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [servicePlans, setServicePlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerForm | null>(null);
+
+  const fetchCustomers = async () => {
+    try {
+      const [custRes, planRes] = await Promise.all([
+        api.get("/customers"),
+        api.get("/serviceplans")
+      ]);
+      setCustomers(custRes.data);
+      setServicePlans(planRes.data);
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchCustomers() {
-      try {
-        const res = await api.get("/customers");
-        setCustomers(res.data);
-      } catch (error) {
-        console.error("Failed to fetch customers", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchCustomers();
   }, []);
 
@@ -53,7 +62,13 @@ export default function CustomersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">Customers</h1>
-        <button className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+        <button 
+          onClick={() => {
+            setSelectedCustomer(null);
+            setIsModalOpen(true);
+          }}
+          className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
           <Plus className="h-4 w-4" />
           Add Customer
         </button>
@@ -90,7 +105,21 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">{getStatusBadge(cust.status)}</td>
                       <td className="px-6 py-4">{format(parseISO(cust.createdAt), "dd MMM yyyy")}</td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button 
+                          onClick={() => {
+                            setSelectedCustomer({
+                              id: cust.id,
+                              name: cust.name,
+                              address: cust.address,
+                              phone: cust.phone,
+                              pppUsername: cust.pppUsername,
+                              status: cust.status,
+                              servicePlanId: cust.servicePlanId
+                            });
+                            setIsModalOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
                           <Edit2 className="h-4 w-4" />
                         </button>
                       </td>
@@ -102,6 +131,17 @@ export default function CustomersPage() {
           )}
         </CardContent>
       </Card>
+
+      <CustomerModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => {
+          setIsModalOpen(false);
+          fetchCustomers();
+        }}
+        customerToEdit={selectedCustomer}
+        servicePlans={servicePlans}
+      />
     </div>
   );
 }

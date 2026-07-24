@@ -33,7 +33,8 @@ public class AppDbContext : DbContext
             SpeedUp = 10,
             SpeedDown = 10,
             Price = 150000,
-            MikrotikProfileName = "profile_10m"
+            MikrotikProfileName = "profile_10m",
+            IsActive = true
         };
         var plan2 = new ServicePlan
         {
@@ -42,7 +43,8 @@ public class AppDbContext : DbContext
             SpeedUp = 20,
             SpeedDown = 20,
             Price = 250000,
-            MikrotikProfileName = "profile_20m"
+            MikrotikProfileName = "profile_20m",
+            IsActive = true
         };
         var plan3 = new ServicePlan
         {
@@ -51,7 +53,8 @@ public class AppDbContext : DbContext
             SpeedUp = 50,
             SpeedDown = 50,
             Price = 400000,
-            MikrotikProfileName = "profile_50m"
+            MikrotikProfileName = "profile_50m",
+            IsActive = true
         };
 
         modelBuilder.Entity<ServicePlan>().HasData(plan1, plan2, plan3);

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { ConfirmPaymentModal } from "@/components/ConfirmPaymentModal";
 
 type Invoice = {
   id: string;
@@ -22,25 +23,26 @@ type Invoice = {
 export default function PendingInvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoice, setSelectedInvoice] = useState<{id: string, amount: number} | null>(null);
+
+  const fetchPending = async () => {
+    try {
+      const res = await api.get("/invoices");
+      const data: Invoice[] = res.data;
+      const filtered = data.filter((inv) => {
+        if (inv.status === 1) return false;
+        const dueDate = parseISO(inv.dueDate);
+        return isToday(dueDate) || isPast(dueDate);
+      });
+      setInvoices(filtered);
+    } catch (error) {
+      console.error("Failed to fetch invoices", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchPending() {
-      try {
-        const res = await api.get("/invoices"); // We need to filter this client side or backend
-        // We'll filter client side for now to get Unpaid or Overdue that is due today or past
-        const data: Invoice[] = res.data;
-        const filtered = data.filter((inv) => {
-          if (inv.status === 1) return false; // Paid
-          const dueDate = parseISO(inv.dueDate);
-          return isToday(dueDate) || isPast(dueDate);
-        });
-        setInvoices(filtered);
-      } catch (error) {
-        console.error("Failed to fetch invoices", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchPending();
   }, []);
 
@@ -72,6 +74,7 @@ export default function PendingInvoicesPage() {
                     <th className="px-6 py-3">Amount</th>
                     <th className="px-6 py-3">Due Date</th>
                     <th className="px-6 py-3">Status</th>
+                    <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,6 +100,15 @@ export default function PendingInvoicesPage() {
                             {expired ? "Expired / Overdue" : "Due Today"}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => setSelectedInvoice({ id: inv.id, amount: inv.amount })}
+                            className="flex items-center justify-end gap-1 text-blue-600 hover:text-blue-800 ml-auto"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-xs font-medium">Confirm Payment</span>
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -106,6 +118,17 @@ export default function PendingInvoicesPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmPaymentModal 
+        isOpen={selectedInvoice !== null}
+        onClose={() => setSelectedInvoice(null)}
+        onSuccess={() => {
+          setSelectedInvoice(null);
+          fetchPending();
+        }}
+        invoiceId={selectedInvoice?.id || null}
+        amount={selectedInvoice?.amount || 0}
+      />
     </div>
   );
 }

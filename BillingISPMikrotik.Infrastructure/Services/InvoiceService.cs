@@ -26,10 +26,10 @@ public class InvoiceService : IInvoiceService
     {
         _logger.LogInformation($"Starting invoice generation for {month}/{year}");
 
-        // 1. Get all active customers with their service plans
+        // 1. Get all customers with their service plans
         var activeCustomers = await _dbContext.Customers
             .Include(c => c.ServicePlan)
-            .Where(c => c.Status == CustomerStatus.Active && c.ServicePlanId != null)
+            .Where(c => c.ServicePlanId != null)
             .ToListAsync();
 
         if (!activeCustomers.Any())

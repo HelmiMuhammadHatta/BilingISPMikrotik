@@ -5,6 +5,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using BillingISPMikrotik.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace BillingISPMikrotik.API.Controllers
 {
@@ -14,10 +16,12 @@ namespace BillingISPMikrotik.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly AppDbContext _dbContext;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, AppDbContext dbContext)
         {
             _configuration = configuration;
+            _dbContext = dbContext;
         }
 
         [HttpPost("login")]
@@ -28,14 +32,23 @@ namespace BillingISPMikrotik.API.Controllers
 
             if (request.Username == adminUser && request.Password == adminPass)
             {
-                var token = GenerateJwtToken();
+                var token = GenerateJwtToken("admin", "Admin");
+                return Ok(new { token });
+            }
+
+            var customer = _dbContext.Customers
+                .FirstOrDefault(c => c.PppUsername == request.Username && c.PppPassword == request.Password);
+
+            if (customer != null)
+            {
+                var token = GenerateJwtToken(customer.Id.ToString(), "Customer");
                 return Ok(new { token });
             }
 
             return Unauthorized(new { message = "Invalid username or password" });
         }
 
-        private string GenerateJwtToken()
+        private string GenerateJwtToken(string id, string role)
         {
             var key = _configuration["Jwt:Key"];
             var issuer = _configuration["Jwt:Issuer"];
@@ -46,8 +59,8 @@ namespace BillingISPMikrotik.API.Controllers
 
             var claims = new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, "admin"),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.NameIdentifier, id),
+                new Claim(ClaimTypes.Role, role)
             };
 
             var token = new JwtSecurityToken(

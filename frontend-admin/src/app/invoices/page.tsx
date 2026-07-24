@@ -5,7 +5,8 @@ import { format, parseISO } from "date-fns";
 import * as XLSX from "xlsx";
 import { api } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Filter } from "lucide-react";
+import { Download, Filter, CheckCircle } from "lucide-react";
+import { ConfirmPaymentModal } from "@/components/ConfirmPaymentModal";
 
 type Invoice = {
   id: string;
@@ -23,18 +24,20 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedInvoice, setSelectedInvoice] = useState<{id: string, amount: number} | null>(null);
+
+  const fetchInvoices = async () => {
+    try {
+      const res = await api.get("/invoices");
+      setInvoices(res.data);
+    } catch (error) {
+      console.error("Failed to fetch invoices", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchInvoices() {
-      try {
-        const res = await api.get("/invoices");
-        setInvoices(res.data);
-      } catch (error) {
-        console.error("Failed to fetch invoices", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchInvoices();
   }, []);
 
@@ -117,6 +120,7 @@ export default function InvoicesPage() {
                     <th className="px-6 py-3">Due Date</th>
                     <th className="px-6 py-3">Status</th>
                     <th className="px-6 py-3">Paid At</th>
+                    <th className="px-6 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,6 +134,17 @@ export default function InvoicesPage() {
                       <td className="px-6 py-4">
                         {inv.paidAt ? format(parseISO(inv.paidAt), "dd MMM yyyy HH:mm") : "-"}
                       </td>
+                      <td className="px-6 py-4 text-right">
+                        {(inv.status === 0 || inv.status === 2) && (
+                          <button
+                            onClick={() => setSelectedInvoice({ id: inv.id, amount: inv.amount })}
+                            className="flex items-center justify-end gap-1 text-blue-600 hover:text-blue-800 ml-auto"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                            <span className="text-xs font-medium">Confirm Payment</span>
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -138,6 +153,17 @@ export default function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfirmPaymentModal 
+        isOpen={selectedInvoice !== null}
+        onClose={() => setSelectedInvoice(null)}
+        onSuccess={() => {
+          setSelectedInvoice(null);
+          fetchInvoices();
+        }}
+        invoiceId={selectedInvoice?.id || null}
+        amount={selectedInvoice?.amount || 0}
+      />
     </div>
   );
 }

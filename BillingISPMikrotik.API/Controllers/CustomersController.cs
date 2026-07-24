@@ -48,7 +48,21 @@ public class CustomersController : ControllerBase
             return BadRequest();
         }
 
-        _dbContext.Entry(customer).State = EntityState.Modified;
+        var existingCustomer = await _dbContext.Customers.FindAsync(id);
+        if (existingCustomer == null)
+        {
+            return NotFound();
+        }
+
+        // Update fields, but preserve CreatedAt
+        existingCustomer.Name = customer.Name;
+        existingCustomer.PppUsername = customer.PppUsername;
+        existingCustomer.PppPassword = customer.PppPassword;
+        existingCustomer.ServicePlanId = customer.ServicePlanId;
+        existingCustomer.Phone = customer.Phone;
+        existingCustomer.Address = customer.Address;
+        existingCustomer.Status = customer.Status;
+        
         await _dbContext.SaveChangesAsync();
         return NoContent();
     }

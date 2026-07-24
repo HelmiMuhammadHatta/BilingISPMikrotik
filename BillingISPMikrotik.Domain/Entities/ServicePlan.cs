@@ -10,4 +10,5 @@ public class ServicePlan
     public int SpeedDown { get; set; } // in Mbps or kbps
     public decimal Price { get; set; }
     public string MikrotikProfileName { get; set; } = string.Empty;
+    public bool IsActive { get; set; } = true;
 }

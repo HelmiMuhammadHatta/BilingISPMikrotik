@@ -9,6 +9,7 @@ const navItems = [
   { name: "Overview", href: "/", icon: LayoutDashboard },
   { name: "Pending Invoices", href: "/pending", icon: Clock },
   { name: "Customers", href: "/customers", icon: Users },
+  { name: "Service Plans", href: "/service-plans", icon: Activity },
   { name: "All Invoices", href: "/invoices", icon: FileText },
   { name: "Audit Logs", href: "/audit-logs", icon: Activity },
 ];
