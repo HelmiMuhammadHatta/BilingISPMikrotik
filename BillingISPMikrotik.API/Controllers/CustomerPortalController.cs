@@ -102,10 +102,6 @@ public class CustomerPortalController : ControllerBase
             return BadRequest("Invoice is already paid.");
         }
         
-        if (!string.IsNullOrEmpty(invoice.SnapToken))
-        {
-            return Ok(new { token = invoice.SnapToken });
-        }
 
         var serverKey = _configuration["PaymentGateway:ServerKey"];
         if (string.IsNullOrEmpty(serverKey))
