@@ -53,8 +53,8 @@ export default function InvoicesPage() {
       Period: `${inv.periodMonth}/${inv.periodYear}`,
       Amount: inv.amount,
       Status: inv.status === 0 ? "Unpaid" : inv.status === 1 ? "Paid" : "Overdue",
-      DueDate: format(parseISO(inv.dueDate), "yyyy-MM-dd"),
-      PaidAt: inv.paidAt ? format(parseISO(inv.paidAt), "yyyy-MM-dd HH:mm") : "-",
+      DueDate: format(parseISO(inv.dueDate.endsWith('Z') ? inv.dueDate : inv.dueDate + 'Z'), "yyyy-MM-dd"),
+      PaidAt: inv.paidAt ? format(parseISO(inv.paidAt.endsWith('Z') ? inv.paidAt : inv.paidAt + 'Z'), "yyyy-MM-dd HH:mm") : "-",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -129,10 +129,10 @@ export default function InvoicesPage() {
                       <td className="px-6 py-4 font-medium text-gray-900">{inv.customer?.name}</td>
                       <td className="px-6 py-4">{`${inv.periodMonth}/${inv.periodYear}`}</td>
                       <td className="px-6 py-4">Rp {inv.amount.toLocaleString("id-ID")}</td>
-                      <td className="px-6 py-4">{format(parseISO(inv.dueDate), "dd MMM yyyy")}</td>
+                      <td className="px-6 py-4">{format(parseISO(inv.dueDate.endsWith('Z') ? inv.dueDate : inv.dueDate + 'Z'), "dd MMM yyyy")}</td>
                       <td className="px-6 py-4">{getStatusBadge(inv.status)}</td>
                       <td className="px-6 py-4">
-                        {inv.paidAt ? format(parseISO(inv.paidAt), "dd MMM yyyy HH:mm") : "-"}
+                        {inv.paidAt ? format(parseISO(inv.paidAt.endsWith('Z') ? inv.paidAt : inv.paidAt + 'Z'), "dd MMM yyyy HH:mm") : "-"}
                       </td>
                       <td className="px-6 py-4 text-right">
                         {(inv.status === 0 || inv.status === 2) && (

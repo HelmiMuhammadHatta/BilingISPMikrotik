@@ -47,7 +47,7 @@ public class InvoiceService : IInvoiceService
         int generatedCount = 0;
         var newInvoices = new List<Invoice>();
 
-        var dueDate = new DateTime(year, month, 10);
+        var dueDate = new DateTime(year, month, 10, 0, 0, 0, DateTimeKind.Utc);
 
         foreach (var customer in activeCustomers)
         {

@@ -103,7 +103,9 @@ export default function CustomersPage() {
                       <td className="px-6 py-4">{cust.servicePlan?.name || "No Plan"}</td>
                       <td className="px-6 py-4">{cust.phone}</td>
                       <td className="px-6 py-4">{getStatusBadge(cust.status)}</td>
-                      <td className="px-6 py-4">{format(parseISO(cust.createdAt), "dd MMM yyyy")}</td>
+                      <td className="px-6 py-4">
+                        {format(parseISO(cust.createdAt.endsWith('Z') ? cust.createdAt : cust.createdAt + 'Z'), "dd MMM yyyy")}
+                      </td>
                       <td className="px-6 py-4 text-right">
                         <button 
                           onClick={() => {
