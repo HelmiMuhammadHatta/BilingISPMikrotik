@@ -123,4 +123,24 @@ public class PaymentService : IPaymentService
 
         return paymentLog;
     }
+
+    public async Task CancelPaymentAsync(Guid invoiceId)
+    {
+        var invoice = await _dbContext.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId);
+        if (invoice != null && invoice.Status == InvoiceStatus.Paid)
+        {
+            // Note: If we are fully rolling back, we might also need to isolate the customer again. 
+            // But usually, an expired transaction just means we clear the token/order id or set status back to Unpaid if it was pending.
+            // Wait, if it's expired/canceled, we just ensure it's not Paid. If it's already Paid (e.g., paid via other means), we probably shouldn't revert it.
+            // A better logic: Midtrans might send cancel/expire for a transaction, but the invoice might have been paid otherwise.
+            // Let's only revert if the invoice is currently marked as pending/unpaid. Actually, if it's already Paid, just ignore.
+        }
+
+        if (invoice != null && invoice.Status != InvoiceStatus.Paid)
+        {
+            // If Midtrans transaction expired/canceled, we might just want to clear the token so they can try again.
+            invoice.SnapToken = null;
+            await _dbContext.SaveChangesAsync();
+        }
+    }
 }

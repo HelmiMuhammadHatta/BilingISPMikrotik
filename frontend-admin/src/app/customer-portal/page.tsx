@@ -5,6 +5,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { LogOut, User, Activity, CreditCard } from "lucide-react";
 import { format } from "date-fns";
+import Script from "next/script";
 
 export default function CustomerPortal() {
   const [data, setData] = useState<any>(null);
@@ -32,11 +33,35 @@ export default function CustomerPortal() {
   const handlePay = async (invoiceId: string) => {
     setPayingInvoiceId(invoiceId);
     try {
-      await api.post(`/CustomerPortal/pay/${invoiceId}`);
-      await fetchData();
+      const response = await api.post(`/CustomerPortal/invoices/${invoiceId}/create-payment`);
+      const snapToken = response.data.token;
+
+      if (typeof window !== "undefined" && (window as any).snap) {
+        (window as any).snap.pay(snapToken, {
+          onSuccess: function (result: any) {
+            console.log("Payment success!", result);
+            alert("Payment success!");
+            fetchData();
+          },
+          onPending: function (result: any) {
+            console.log("Payment pending", result);
+            alert("Waiting your payment!");
+            fetchData();
+          },
+          onError: function (result: any) {
+            console.log("Payment error", result);
+            alert("Payment failed!");
+          },
+          onClose: function () {
+            console.log("customer closed the popup without finishing the payment");
+          }
+        });
+      } else {
+        alert("Payment gateway is not loaded yet.");
+      }
     } catch (error) {
-      console.error("Failed to pay invoice", error);
-      alert("Payment failed. Please try again.");
+      console.error("Failed to initiate payment", error);
+      alert("Failed to initiate payment. Please try again.");
     } finally {
       setPayingInvoiceId(null);
     }
@@ -63,6 +88,10 @@ export default function CustomerPortal() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+      />
       <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Welcome, {customer.name}</h2>

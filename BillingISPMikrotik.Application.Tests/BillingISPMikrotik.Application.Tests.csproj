@@ -25,6 +25,7 @@
     <ProjectReference Include="..\BillingISPMikrotik.Application\BillingISPMikrotik.Application.csproj" />
     <ProjectReference Include="..\BillingISPMikrotik.Infrastructure\BillingISPMikrotik.Infrastructure.csproj" />
     <ProjectReference Include="..\BillingISPMikrotik.Domain\BillingISPMikrotik.Domain.csproj" />
+    <ProjectReference Include="..\BillingISPMikrotik.API\BillingISPMikrotik.API.csproj" />
   </ItemGroup>
 
 </Project>

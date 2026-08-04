@@ -16,4 +16,6 @@ public class Invoice
     public InvoiceStatus Status { get; set; }
     public DateTime DueDate { get; set; }
     public DateTime? PaidAt { get; set; }
+    public string? MidtransOrderId { get; set; }
+    public string? SnapToken { get; set; }
 }

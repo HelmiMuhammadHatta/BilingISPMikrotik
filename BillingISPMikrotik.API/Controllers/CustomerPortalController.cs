@@ -5,8 +5,13 @@ using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 using BillingISPMikrotik.Application.Services;
 using BillingISPMikrotik.Infrastructure.Persistence;
+using Microsoft.Extensions.Configuration;
 
 namespace BillingISPMikrotik.API.Controllers;
 
@@ -17,11 +22,13 @@ public class CustomerPortalController : ControllerBase
 {
     private readonly AppDbContext _dbContext;
     private readonly IPaymentService _paymentService;
+    private readonly IConfiguration _configuration;
 
-    public CustomerPortalController(AppDbContext dbContext, IPaymentService paymentService)
+    public CustomerPortalController(AppDbContext dbContext, IPaymentService paymentService, IConfiguration configuration)
     {
         _dbContext = dbContext;
         _paymentService = paymentService;
+        _configuration = configuration;
     }
 
     [HttpGet("my-data")]
@@ -72,8 +79,8 @@ public class CustomerPortalController : ControllerBase
         });
     }
 
-    [HttpPost("pay/{invoiceId}")]
-    public async Task<IActionResult> SimulatePayment(Guid invoiceId)
+    [HttpPost("invoices/{invoiceId}/create-payment")]
+    public async Task<IActionResult> CreatePayment(Guid invoiceId)
     {
         var customerIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(customerIdClaim) || !Guid.TryParse(customerIdClaim, out var customerId))
@@ -81,7 +88,10 @@ public class CustomerPortalController : ControllerBase
             return Unauthorized();
         }
 
-        var invoice = await _dbContext.Invoices.FirstOrDefaultAsync(i => i.Id == invoiceId && i.CustomerId == customerId);
+        var invoice = await _dbContext.Invoices
+            .Include(i => i.Customer)
+            .FirstOrDefaultAsync(i => i.Id == invoiceId && i.CustomerId == customerId);
+            
         if (invoice == null)
         {
             return NotFound("Invoice not found or does not belong to you.");
@@ -91,11 +101,66 @@ public class CustomerPortalController : ControllerBase
         {
             return BadRequest("Invoice is already paid.");
         }
+        
+        if (!string.IsNullOrEmpty(invoice.SnapToken))
+        {
+            return Ok(new { token = invoice.SnapToken });
+        }
 
-        // Simulate payment
-        var amount = invoice.Amount;
-        await _paymentService.ConfirmPaymentAsync(invoiceId, "Simulated Customer Payment", amount, $"SIM-REF-{DateTime.UtcNow.Ticks}");
+        var serverKey = _configuration["PaymentGateway:ServerKey"];
+        if (string.IsNullOrEmpty(serverKey))
+        {
+            return StatusCode(500, "Server configuration error.");
+        }
 
-        return Ok(new { message = "Payment simulated successfully." });
+        var orderId = $"{invoiceId}-{DateTime.UtcNow.Ticks}";
+
+        var payload = new
+        {
+            transaction_details = new
+            {
+                order_id = orderId,
+                gross_amount = (int)invoice.Amount
+            },
+            customer_details = new
+            {
+                first_name = invoice.Customer.Name,
+                phone = invoice.Customer.Phone,
+                billing_address = new
+                {
+                    address = invoice.Customer.Address
+                }
+            }
+        };
+
+        var jsonPayload = JsonSerializer.Serialize(payload);
+        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+
+        using var client = new HttpClient();
+        var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{serverKey}:"));
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
+
+        var response = await client.PostAsync("https://app.sandbox.midtrans.com/snap/v1/transactions", content);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorResponse = await response.Content.ReadAsStringAsync();
+            return StatusCode(500, $"Failed to create transaction with Midtrans: {errorResponse}");
+        }
+
+        var responseJson = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(responseJson);
+        var root = document.RootElement;
+        
+        if (root.TryGetProperty("token", out var tokenElement))
+        {
+            var snapToken = tokenElement.GetString();
+            invoice.SnapToken = snapToken;
+            invoice.MidtransOrderId = orderId;
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(new { token = snapToken });
+        }
+
+        return StatusCode(500, "Invalid response from Midtrans.");
     }
 }

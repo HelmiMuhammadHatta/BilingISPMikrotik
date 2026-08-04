@@ -7,4 +7,5 @@ namespace BillingISPMikrotik.Application.Services;
 public interface IPaymentService
 {
     Task<PaymentLog> ConfirmPaymentAsync(Guid invoiceId, string method, decimal amount, string referenceNumber);
+    Task CancelPaymentAsync(Guid invoiceId);
 }

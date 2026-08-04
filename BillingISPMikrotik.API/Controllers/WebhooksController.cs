@@ -30,7 +30,7 @@ public class WebhooksController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("payment-gateway")]
+    [HttpPost("midtrans-notification")]
     public async Task<IActionResult> PaymentGatewayWebhook([FromBody] MidtransWebhookPayload payload)
     {
         // 1. Validasi Signature
@@ -56,13 +56,14 @@ public class WebhooksController : ControllerBase
         // 2. Cek status pembayaran
         if (payload.TransactionStatus == "settlement" || payload.TransactionStatus == "capture")
         {
-            if (!Guid.TryParse(payload.OrderId, out var invoiceId))
+            var invoiceIdStr = payload.OrderId.Length >= 36 ? payload.OrderId.Substring(0, 36) : payload.OrderId;
+            if (!Guid.TryParse(invoiceIdStr, out var invoiceId))
             {
                 _logger.LogWarning($"Invalid OrderId format: {payload.OrderId}");
                 return BadRequest("Invalid Order ID format");
             }
 
-            if (!decimal.TryParse(payload.GrossAmount, out var amount))
+            if (!decimal.TryParse(payload.GrossAmount, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amount))
             {
                 _logger.LogWarning($"Invalid GrossAmount format: {payload.GrossAmount}");
                 return BadRequest("Invalid Amount format");
@@ -95,6 +96,15 @@ public class WebhooksController : ControllerBase
             {
                 _logger.LogError($"Unexpected error processing webhook: {ex.Message}");
                 return StatusCode(500, "Internal server error");
+            }
+        }
+        else if (payload.TransactionStatus == "expire" || payload.TransactionStatus == "cancel" || payload.TransactionStatus == "deny")
+        {
+            var invoiceIdStr = payload.OrderId.Length >= 36 ? payload.OrderId.Substring(0, 36) : payload.OrderId;
+            if (Guid.TryParse(invoiceIdStr, out var invoiceId))
+            {
+                await _paymentService.CancelPaymentAsync(invoiceId);
+                _logger.LogInformation($"Payment cancelled/expired for Order ID: {payload.OrderId}");
             }
         }
 
