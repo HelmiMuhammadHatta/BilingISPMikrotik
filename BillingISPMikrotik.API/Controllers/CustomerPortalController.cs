@@ -113,7 +113,7 @@ public class CustomerPortalController : ControllerBase
             return StatusCode(500, "Server configuration error.");
         }
 
-        var orderId = $"{invoiceId}-{DateTime.UtcNow.Ticks}";
+        var orderId = $"{invoiceId.ToString("N")}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}";
 
         var payload = new
         {
@@ -137,10 +137,12 @@ public class CustomerPortalController : ControllerBase
         var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
         using var client = new HttpClient();
-        var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{serverKey}:"));
+        var authString = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{serverKey.Trim()}:"));
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", authString);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-        var response = await client.PostAsync("https://app.sandbox.midtrans.com/snap/v1/transactions", content);
+        var baseUrl = "https://app.sandbox.midtrans.com";
+        var response = await client.PostAsync($"{baseUrl}/snap/v1/transactions", content);
         if (!response.IsSuccessStatusCode)
         {
             var errorResponse = await response.Content.ReadAsStringAsync();

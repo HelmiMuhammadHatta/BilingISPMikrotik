@@ -1,0 +1,1 @@
+INSERT INTO "Invoices" ("Id", "CustomerId", "ServicePlanId", "Amount", "PeriodMonth", "PeriodYear", "DueDate", "Status") VALUES ('f1f1f1f1-f1f1-f1f1-f1f1-f1f1f1f1f1f1', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', '11111111-1111-1111-1111-111111111111', 10000, 9, 2026, '2026-09-10', 0);

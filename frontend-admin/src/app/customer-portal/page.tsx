@@ -126,13 +126,12 @@ export default function CustomerPortal() {
             <p className="text-sm text-gray-500 font-medium">Internet Status</p>
             <div className="mt-2">
               <span
-                className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                  customer.status === 0
+                className={`px-3 py-1 text-xs font-semibold rounded-full ${customer.status === 0
                     ? "bg-green-100 text-green-800"
                     : customer.status === 1
-                    ? "bg-orange-100 text-orange-800"
-                    : "bg-red-100 text-red-800"
-                }`}
+                      ? "bg-orange-100 text-orange-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
               >
                 {customer.status === 0 ? "Active" : customer.status === 1 ? "Isolated" : "Suspended"}
               </span>
@@ -189,13 +188,12 @@ export default function CustomerPortal() {
                     </td>
                     <td className="py-4 px-6">
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          inv.status === 1
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${inv.status === 1
                             ? "bg-green-100 text-green-800"
                             : inv.status === 2
-                            ? "bg-red-100 text-red-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
+                              ? "bg-red-100 text-red-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
                       >
                         {inv.status === 1 ? "Paid" : inv.status === 2 ? "Overdue" : "Unpaid"}
                       </span>
