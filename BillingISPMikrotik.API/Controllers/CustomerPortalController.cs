@@ -142,6 +142,7 @@ public class CustomerPortalController : ControllerBase
         if (!response.IsSuccessStatusCode)
         {
             var errorResponse = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"[Midtrans Error] {errorResponse}");
             return StatusCode(500, $"Failed to create transaction with Midtrans: {errorResponse}");
         }
 
