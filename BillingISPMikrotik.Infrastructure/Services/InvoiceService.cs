@@ -29,7 +29,7 @@ public class InvoiceService : IInvoiceService
         // 1. Get all customers with their service plans
         var activeCustomers = await _dbContext.Customers
             .Include(c => c.ServicePlan)
-            .Where(c => c.ServicePlanId != null)
+            .Where(c => c.ServicePlanId != null && c.Status == CustomerStatus.Active)
             .ToListAsync();
 
         if (!activeCustomers.Any())
